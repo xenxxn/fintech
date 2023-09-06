@@ -1,15 +1,38 @@
 package com.zerobase.api.loan.request
 
-class LoanRequestServiceImpl: LoanRequestService {
+import com.zerobase.api.loan.GenerateKey
+import com.zerobase.api.loan.encrypt.EncryptComponent
+import com.zerobase.domain.domain.UserInfo
+import com.zerobase.domain.repository.UserInfoRepository
+import org.springframework.stereotype.Service
+
+@Service
+class LoanRequestServiceImpl(
+        private val generateKey : GenerateKey,
+        private val userInfoRepository: UserInfoRepository,
+        private val encryptComponent: EncryptComponent
+): LoanRequestService {
     override fun loanRequestMain(
             loanRequestInputDto: LoanRequestDto.LoanRequestInputDto
     ): LoanRequestDto.LoanRequestResponseDto {
-        TODO("Not yet implemented")
+        val userKey = generateKey.generateUserKey()
+
+        loanRequestInputDto.userRegistrationNumber =
+                encryptComponent.encryptString(loanRequestInputDto.userRegistrationNumber)
+        saveUserInfo(
+            loanRequestInputDto.toUserInfoDto(userKey)
+        )
+
+        loanRequestReview(userKey)
+
+        return LoanRequestDto.LoanRequestResponseDto(userKey)
     }
 
-    override fun saveUserInfo(loanRequestInputDto: LoanRequestDto.LoanRequestInputDto) {
-        TODO("Not yet implemented")
-    }
+    override fun saveUserInfo(userInfoDto: UserInfoDto) =
+        userInfoRepository.save(
+            userInfoDto.toEntity()
+        )
+
 
     override fun loanRequestReview(userKey: String) {
         TODO("Not yet implemented")
